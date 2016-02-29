@@ -19,11 +19,12 @@ public class FooVerticle extends AbstractVerticle {
     public void start(Future<Void> fut) {
         FooVerticle fv = this;
         // Create a JDBC client with a test database
-        client = JDBCClient.createShared(vertx,
-                                         new JsonObject().put("url",
-                                                              "jdbc:hsqldb:mem:test?shutdown=true")
-                                                         .put("driver_class",
-                                                              "org.hsqldb.jdbcDriver"));
+        JsonObject jdbcConf = new JsonObject().put("url", config().getString("jdbc.url"))
+                                              .put("driver_class",
+                                                   config().getString("jdbc.driver_class"));
+
+        client = JDBCClient.createShared(vertx, jdbcConf);
+        
         setUpInitialData(ready -> {
             Router router = Router.router(vertx);
             router.route().handler(BodyHandler.create());

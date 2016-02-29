@@ -7,7 +7,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -21,7 +23,14 @@ public class FooVerticleTest {
     @Before
     public void setUp(TestContext ctx) throws IOException {
         vertx = Vertx.vertx();
-        vertx.deployVerticle(FooVerticle.class.getName(), ctx.asyncAssertSuccess());
+
+        JsonObject appConf = new JsonObject().put("http.port", port)
+                                             .put("jdbc.url", "jdbc:hsqldb:mem:test?shutdown=true")
+                                             .put("jdbc.driver_class", "org.hsqldb.jdbcDriver");
+
+        DeploymentOptions opts = new DeploymentOptions().setConfig(appConf);
+
+        vertx.deployVerticle(FooVerticle.class.getName(), opts, ctx.asyncAssertSuccess());
     }
 
     @After
