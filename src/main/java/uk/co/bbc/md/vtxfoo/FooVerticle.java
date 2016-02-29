@@ -1,21 +1,22 @@
 package uk.co.bbc.md.vtxfoo;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.jdbc.JDBCClient;
+import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.jdbc.JDBCClient;
-import io.vertx.ext.sql.SQLConnection;
 
 public class FooVerticle extends AbstractVerticle {
     private JDBCClient client;
 
     @Override
-    public void start() {
+    public void start(Future<Void> fut) {
         FooVerticle fv = this;
         // Create a JDBC client with a test database
         client = JDBCClient.createShared(vertx,
@@ -26,11 +27,11 @@ public class FooVerticle extends AbstractVerticle {
         setUpInitialData(ready -> {
             Router router = Router.router(vertx);
             router.route().handler(BodyHandler.create());
-            router.route("/ip*").handler(ctx -> client.getConnection(res -> {
-                if (res.failed()) {
-                    ctx.fail(res.cause());
+            router.route("/ip*").handler(ctx -> client.getConnection(result -> {
+                if (result.failed()) {
+                    ctx.fail(result.cause());
                 } else {
-                    SQLConnection conn = res.result();
+                    SQLConnection conn = result.result();
                     // Save the connection on the context
                     ctx.put("conn", conn);
                     // Return the connection back to the jdbc pool.
@@ -46,26 +47,34 @@ public class FooVerticle extends AbstractVerticle {
 
             router.get("/ip/:ip").handler(fv::handleGetIp);
             router.get("/status").handler(fv::handleGetStatus);
-            vertx.createHttpServer().requestHandler(router::accept).listen(8080);
+
+            vertx.createHttpServer().requestHandler(router::accept)
+                 .listen(config().getInteger("http.port", 8080), result -> {
+                if (result.succeeded()) {
+                    fut.complete();
+                } else {
+                    fut.fail(result.cause());
+                }
+            });
         });
     }
 
     private void handleGetIp(RoutingContext ctx) {
         String ip = ctx.request().getParam("ip");
-        HttpServerResponse resp = ctx.response();
+        HttpServerResponse response = ctx.response();
         if (ip == null) {
-            sendError(400, resp);
+            sendError(400, response);
         } else {
             SQLConnection conn = ctx.get("conn");
             conn.queryWithParams("SELECT ip, isp FROM ips where ip = ?", new JsonArray().add(ip),
                                  query -> {
                                      if (query.failed()) {
-                                         sendError(500, resp);
+                                         sendError(500, response);
                                      } else if (query.result().getNumRows() == 0) {
-                                         sendError(404, resp);
+                                         sendError(404, response);
                                      } else {
-                                         resp.putHeader("content-type", "application/json")
-                                             .end(query.result().getRows().get(0).encode());
+                                         response.putHeader("content-type", "application/json")
+                                                 .end(query.result().getRows().get(0).encode());
                                      }
                                  });
         }
