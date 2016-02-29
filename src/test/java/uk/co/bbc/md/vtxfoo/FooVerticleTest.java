@@ -1,6 +1,7 @@
 package uk.co.bbc.md.vtxfoo;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 
 import org.junit.After;
 import org.junit.Before;
@@ -18,11 +19,15 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 public class FooVerticleTest {
 
     private Vertx vertx;
-    private Integer port = 8080;
+    private Integer port;
 
     @Before
     public void setUp(TestContext ctx) throws IOException {
         vertx = Vertx.vertx();
+        
+        ServerSocket socket = new ServerSocket(0);
+        port = socket.getLocalPort();
+        socket.close();
 
         JsonObject appConf = new JsonObject().put("http.port", port)
                                              .put("jdbc.url", "jdbc:hsqldb:mem:test?shutdown=true")
@@ -43,7 +48,7 @@ public class FooVerticleTest {
         // get an async handler to inform the test when we are done.
         final Async async = context.async();
 
-        vertx.createHttpClient().getNow(8080, "localhost", "/status", response -> {
+        vertx.createHttpClient().getNow(port, "localhost", "/status", response -> {
             context.assertEquals(200, response.statusCode());
             async.complete();
         });
