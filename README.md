@@ -48,5 +48,7 @@ If you want to see the raw start up time of the app (as long as you've run mvn p
 ## References
 
 http://vertx.io/docs/vertx-core/java/
+
 http://vertx.io/docs/vertx-web/java/
+
 https://github.com/vert-x3/vertx-examples/tree/master/web-examples/src/main/java/io/vertx/example/web/jdbc
