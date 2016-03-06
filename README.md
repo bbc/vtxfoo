@@ -7,7 +7,7 @@ Execute the following at the root of the project:
 `./run.sh`
 
 Having the above continuously running enables hot retesting, repackaging and local re-running following code changes.
-If you want to see the raw start up time of the app (as long as you've run mvn package once), comment out the `mvn package` in the run.sh script and then re-run it.
+If you want to see the raw start up time of the app (as long as you've run mvn package once), comment out the `mvn package` line in the run.sh script and then re-run it.
 
 ## Building and running for CentOS target
 -----------------------------------------
