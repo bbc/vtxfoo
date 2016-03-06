@@ -1,0 +1,15 @@
+{
+    "name": "vtxfoo",
+    "status_page": "/status",
+    "handle": [
+        {
+            "path": "/",
+            "allow_dev_certs": true
+        }
+    ],
+    "packaging": {
+        "type": "spec",
+        "requires": ["java-1.8.0-openjdk"]
+    }
+}
+
