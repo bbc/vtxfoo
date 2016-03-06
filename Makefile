@@ -1,4 +1,4 @@
-.PHONY: clean test uberjar sources rpm
+.PHONY: clean test fatjar sources rpm
 
 clean:
 	mvn clean
